@@ -82,40 +82,50 @@ export default function LoginPage() {
               <div className="space-y-4">
                 <div>
                   <p className="text-[11px] uppercase tracking-wide text-slate-500 mb-2">
-                    Key capabilities
+                    How to request service
                   </p>
-                  <ul className="space-y-2 text-sm text-slate-800">
-                    <li className="flex items-start gap-2">
-                      <span className="mt-1 h-1.5 w-1.5 rounded-full bg-blue-500" />
-                      <span>
-                        Employees submit structured tickets for hardware,
-                        software, and network issues with clear categorization.
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="mt-1 h-1.5 w-1.5 rounded-full bg-orange-500" />
-                      <span>
-                        ICT teams prioritize, assign, and update requests
-                        within a transparent workflow and full history.
-                      </span>
-                    </li>
-                    <li className="flex items-start gap-2">
-                      <span className="mt-1 h-1.5 w-1.5 rounded-full bg-blue-400" />
-                      <span>
-                        Management monitors volumes, turnaround time, and
-                        service performance using consolidated records.
-                      </span>
-                    </li>
-                  </ul>
+                  <div className="overflow-hidden rounded-lg border border-slate-200 bg-white/70 shadow-sm">
+                    {[
+                      {
+                        title: 'Log your issue',
+                        description:
+                          'Sign in and open the New Service Request form to describe the hardware, software, or network problem.',
+                      },
+                      {
+                        title: 'Set details & submit',
+                        description:
+                          'Choose the appropriate priority and category, include helpful notes or attachments, then send it to ICT.',
+                      },
+                      {
+                        title: 'Track progress',
+                        description:
+                          'Use the My Requests page to monitor updates, technician comments, and final resolution.',
+                      },
+                    ].map((row, idx) => (
+                      <div
+                        key={row.title}
+                        className={`grid grid-cols-[110px_1fr] text-sm text-slate-800 ${
+                          idx !== 0 ? 'border-t border-slate-200' : ''
+                        }`}
+                      >
+                        <div className="bg-blue-50/70 px-3 py-3 text-[11px] font-semibold uppercase tracking-wide text-blue-800">
+                          Step {idx + 1}
+                        </div>
+                        <div className="px-3 py-3 leading-relaxed">{row.description}</div>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
             </div>
 
             <div className="pt-4 border-t border-slate-200 mt-6">
-              <p className="text-[11px] text-slate-600">
-                For internal use within authorized government offices only. Use
-                of this system may be logged and audited.
-              </p>
+              <Link
+                to="/register"
+                className="inline-flex items-center justify-center rounded-md border border-blue-600 px-4 py-2 text-xs font-semibold text-blue-600 hover:bg-blue-50 transition"
+              >
+                Don’t have an account? Register as employee
+              </Link>
             </div>
           </div>
 
@@ -147,10 +157,7 @@ export default function LoginPage() {
                     <h2 className="text-xl font-semibold text-slate-900">
                       Sign in to your account
                     </h2>
-                    <p className="text-xs text-slate-600">
-                      Use your institutional email and password to manage or
-                      submit ICT service requests.
-                    </p>
+                  
                   </div>
 
                   
@@ -216,20 +223,16 @@ export default function LoginPage() {
                     </button>
                   </form>
 
-                  <p className="text-[11px] text-slate-600 mt-4 text-center">
-                    Don’t have an account?{' '}
+                  <div className="text-center mt-4">
                     <Link
                       to="/register"
-                      className="font-medium text-orange-600 hover:text-orange-700"
+                      className="inline-flex items-center justify-center rounded-md border border-orange-500 px-4 py-2 text-xs font-semibold text-orange-600 hover:bg-orange-50 transition"
                     >
-                      Register as employee
+                      Don’t have an account? Register as employee
                     </Link>
-                  </p>
+                  </div>
 
-                  <p className="mt-3 text-[10px] text-center text-slate-500">
-                    By signing in, you confirm that you are an authorized user
-                    and agree to comply with institutional ICT policies.
-                  </p>
+           
           
            
             </div>

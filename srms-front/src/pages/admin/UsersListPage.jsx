@@ -164,7 +164,7 @@ export default function UsersListPage() {
       <div className="bg-white rounded-lg shadow-sm border border-slate-200 overflow-x-auto">
         {loading ? (
           <div className="p-4 text-sm text-slate-500">Loading users...</div>
-        ) : users.length === 0 ? (
+        ) : users.filter((u) => u.role !== 'EMPLOYEE').length === 0 ? (
           <div className="p-4 text-sm text-slate-500">No users found.</div>
         ) : (
           <table className="min-w-full text-xs md:text-sm">
@@ -192,7 +192,9 @@ export default function UsersListPage() {
               </tr>
             </thead>
             <tbody>
-              {users.map((u) => (
+              {users
+                .filter((u) => u.role !== 'EMPLOYEE')
+                .map((u) => (
                 <tr
                   key={u.id}
                   className="border-b border-slate-100 hover:bg-slate-50/80"

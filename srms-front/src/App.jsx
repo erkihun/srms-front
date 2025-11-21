@@ -12,6 +12,7 @@ import EmployeeRegisterPage from './pages/employee/EmployeeRegisterPage.jsx';
 import DashboardPage from './pages/admin/DashboardPage.jsx';
 import UsersListPage from './pages/admin/UsersListPage.jsx';
 import UserFormPage from './pages/admin/UserFormPage.jsx'
+import EmployeesPage from './pages/admin/EmployeesPage.jsx';
 import DepartmentsPage from './pages/admin/DepartmentsPage.jsx';
 import CategoriesPage from './pages/admin/CategoriesPage.jsx';
 import TicketsPage from './pages/admin/TicketsPage.jsx';
@@ -25,6 +26,7 @@ import EmployeeMyTicketsPage from './pages/employee/EmployeeMyTicketsPage.jsx';
 import EmployeeNewRequestPage from './pages/employee/EmployeeNewRequestPage.jsx';
 import EmployeeTicketDetailPage from './pages/employee/EmployeeTicketDetailPage.jsx';
 import EmployeeNotificationsPage from './pages/employee/EmployeeNotificationsPage.jsx';
+import EmployeeProfilePage from './pages/employee/EmployeeProfilePage.jsx';
 
 import TechnicianAssignedTicketsPage from './pages/technician/TechnicianAssignedTicketsPage.jsx';
 import TechnicianTicketDetailPage from './pages/technician/TechnicianTicketDetailPage.jsx';
@@ -89,6 +91,7 @@ export default function App() {
       <Route path="users" element={<UsersListPage />} />
       <Route path="users/new" element={<UserFormPage />} />
       <Route path="users/:id/edit" element={<UserFormPage />} />
+      <Route path="employees" element={<EmployeesPage />} />
 
         <Route path="departments" element={<DepartmentsPage />} />
         <Route path="categories" element={<CategoriesPage />} />
@@ -118,7 +121,8 @@ export default function App() {
         <Route path="requests/:id" element={<EmployeeTicketDetailPage />} />
         <Route path="new-request" element={<EmployeeNewRequestPage />} />
         <Route path="tickets/:id" element={<EmployeeTicketDetailPage />} />
-         <Route path="notifications" element={<EmployeeNotificationsPage />} />
+        <Route path="notifications" element={<EmployeeNotificationsPage />} />
+        <Route path="profile" element={<EmployeeProfilePage />} />
       </Route>
 
       

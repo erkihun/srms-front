@@ -57,6 +57,23 @@ function LogoutIcon({ className = 'h-4 w-4' }) {
   );
 }
 
+function ProfileIcon({ className = 'h-4 w-4' }) {
+  return (
+    <svg
+      className={className}
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <circle cx="12" cy="7" r="4" />
+      <path d="M5.5 21a6.5 6.5 0 0 1 13 0" />
+    </svg>
+  );
+}
+
 function BellIcon({ className = 'h-4 w-4' }) {
   return (
     <svg
@@ -178,6 +195,16 @@ export default function EmployeeLayout() {
                 <span>New Request</span>
               </NavLink>
 
+              <NavLink
+                to="/employee/profile"
+                className={({ isActive }) =>
+                  `${linkBaseClasses} ${isActive ? activeMyRequests : inactiveLink}`
+                }
+              >
+                <ProfileIcon className="h-4 w-4" />
+                <span>Profile</span>
+              </NavLink>
+
               <button
                 onClick={logout}
                 className="ml-2 inline-flex items-center gap-1.5 rounded-md border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50"
@@ -254,6 +281,17 @@ export default function EmployeeLayout() {
                 >
                   <MyRequestsIcon className="h-4 w-4" />
                   <span>My Requests</span>
+                </NavLink>
+
+                <NavLink
+                  to="/employee/profile"
+                  className={({ isActive }) =>
+                    `${linkBaseClasses} ${isActive ? activeMyRequests : inactiveLink}`
+                  }
+                  onClick={() => setMenuOpen(false)}
+                >
+                  <ProfileIcon className="h-4 w-4" />
+                  <span>Profile</span>
                 </NavLink>
 
                 <NavLink

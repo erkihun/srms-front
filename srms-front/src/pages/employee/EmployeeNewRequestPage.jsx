@@ -28,10 +28,6 @@ const [myTicketsLoading, setMyTicketsLoading] = useState(true);
         const cats = catRes.data || [];
         setDepartments(deps);
         setCategories(cats);
-
-        if (user?.department_id) {
-          setDepartmentId(String(user.department_id));
-        }
       })
       .catch((err) => {
         console.error(err);
@@ -40,6 +36,12 @@ const [myTicketsLoading, setMyTicketsLoading] = useState(true);
       .finally(() => {
         setMetaLoading(false);
       });
+  }, []);
+
+  useEffect(() => {
+    if (user?.department_id) {
+      setDepartmentId(String(user.department_id));
+    }
   }, [user]);
 
   const handleSubmit = async (e) => {
@@ -104,6 +106,10 @@ const [myTicketsLoading, setMyTicketsLoading] = useState(true);
   const selectedDepartment = departments.find(
     (d) => String(d.id) === String(departmentId)
   );
+  const accountDepartmentName =
+    selectedDepartment?.name ||
+    user?.department_name ||
+    (user?.department?.name ?? null);
 
   return (
     <div className="max-w-6xl mx-auto space-y-4">
@@ -175,21 +181,38 @@ const [myTicketsLoading, setMyTicketsLoading] = useState(true);
               Department <span className="text-red-500">*</span>
             </label>
 
-            <div className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 flex items-center justify-between">
-              <span>
-                {metaLoading
-                  ? 'Loading...'
-                  : selectedDepartment
-                  ? selectedDepartment.name
-                  : 'Not linked to any department'}
-              </span>
-              <span className="text-[10px] text-slate-500 ml-2">
-                from your account
-              </span>
-            </div>
-
-            
-            <input type="hidden" value={departmentId} required />
+            {user?.department_id ? (
+              <>
+                <div className="w-full rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-800 flex items-center justify-between">
+                  <span>
+                    {metaLoading
+                      ? 'Loading...'
+                      : accountDepartmentName || 'Not linked to any department'}
+                  </span>
+                  <span className="text-[10px] text-slate-500 ml-2">
+                    from your account
+                  </span>
+                </div>
+                <input type="hidden" value={departmentId} required />
+              </>
+            ) : (
+              <select
+                className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                value={departmentId}
+                onChange={(e) => setDepartmentId(e.target.value)}
+                disabled={metaLoading}
+                required
+              >
+                <option value="">
+                  {metaLoading ? 'Loading departments...' : 'Select department'}
+                </option>
+                {departments.map((d) => (
+                  <option key={d.id} value={d.id}>
+                    {d.name}
+                  </option>
+                ))}
+              </select>
+            )}
           </div>
 
           
