@@ -1,24 +1,32 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import axios from '../../lib/axiosClient.js';
 import { useAuth } from '../../context/AuthContext.jsx';
 
 export default function EmployeeNewRequestPage() {
   const { user } = useAuth(); 
+  const location = useLocation();
+  const editTicket = location.state?.editTicket;
+  const isEdit = Boolean(editTicket?.id);
 const [myTickets, setMyTickets] = useState([]);
 const [myTicketsLoading, setMyTicketsLoading] = useState(true);
   const [departments, setDepartments] = useState([]);
   const [categories, setCategories] = useState([]);
 
-  const [title, setTitle] = useState('');
-  const [priority, setPriority] = useState('MEDIUM');
-  const [departmentId, setDepartmentId] = useState('');  
-  const [categoryId, setCategoryId] = useState('');
-  const [description, setDescription] = useState('');
+  const [title, setTitle] = useState(editTicket?.title || '');
+  const [priority, setPriority] = useState(editTicket?.priority || 'MEDIUM');
+  const [departmentId, setDepartmentId] = useState(editTicket?.department_id ? String(editTicket.department_id) : '');  
+  const [categoryId, setCategoryId] = useState(editTicket?.category_id ? String(editTicket.category_id) : '');
+  const [description, setDescription] = useState(editTicket?.description || '');
+  const [attachments, setAttachments] = useState([]);
+  const fileInputRef = useRef(null);
 
   const [saving, setSaving] = useState(false);
   const [metaLoading, setMetaLoading] = useState(true);
   const [success, setSuccess] = useState('');
   const [error, setError] = useState('');
+  const [existingAttachments, setExistingAttachments] = useState([]);
+  const [existingAttachmentsLoading, setExistingAttachmentsLoading] = useState(false);
 
   useEffect(() => {
     setMetaLoading(true);
@@ -39,10 +47,36 @@ const [myTicketsLoading, setMyTicketsLoading] = useState(true);
   }, []);
 
   useEffect(() => {
-    if (user?.department_id) {
+    if (user?.department_id && !isEdit) {
       setDepartmentId(String(user.department_id));
     }
-  }, [user]);
+  }, [user, isEdit]);
+
+  useEffect(() => {
+    if (isEdit) {
+      setTitle(editTicket?.title || '');
+      setDescription(editTicket?.description || '');
+      setPriority(editTicket?.priority || 'MEDIUM');
+      setCategoryId(editTicket?.category_id ? String(editTicket.category_id) : '');
+      setDepartmentId(editTicket?.department_id ? String(editTicket.department_id) : '');
+    }
+  }, [editTicket, isEdit]);
+
+  useEffect(() => {
+    if (!isEdit || !editTicket?.id) return;
+    const loadExistingAttachments = async () => {
+      setExistingAttachmentsLoading(true);
+      try {
+        const res = await axios.get(`/tickets/${editTicket.id}/attachments`);
+        setExistingAttachments(res.data || []);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setExistingAttachmentsLoading(false);
+      }
+    };
+    loadExistingAttachments();
+  }, [isEdit, editTicket]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -73,19 +107,71 @@ const [myTicketsLoading, setMyTicketsLoading] = useState(true);
     setSaving(true);
 
     try {
-      await axios.post('/tickets', {
-        title: title.trim(),
-        description: description.trim(),
-        priority,
-        department_id: departmentId,   
-        category_id: categoryId,
-      });
+      if (isEdit && editTicket?.id) {
+        const ticketId = editTicket.id;
+        await axios.patch(`/tickets/${ticketId}/employee-update`, {
+          title: title.trim(),
+          description: description.trim(),
+          priority,
+          department_id: departmentId,
+          category_id: categoryId,
+        });
 
-      setSuccess('Your request has been submitted successfully.');
-      setTitle('');
-      setDescription('');
-      setPriority('MEDIUM');
-      setCategoryId('');
+        if (attachments.length > 0) {
+          await Promise.all(
+            attachments.map((file) => {
+              const formData = new FormData();
+              formData.append('file', file);
+              return axios.post(`/tickets/${ticketId}/attachments`, formData, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+              });
+            })
+          );
+        }
+
+        setSuccess(
+          attachments.length > 0
+            ? 'Your request was updated and attachments uploaded.'
+            : 'Your request was updated successfully.'
+        );
+      } else {
+        const ticketRes = await axios.post('/tickets', {
+          title: title.trim(),
+          description: description.trim(),
+          priority,
+          department_id: departmentId,   
+          category_id: categoryId,
+        });
+
+        const created = ticketRes?.data;
+
+        if (attachments.length > 0 && created?.id) {
+          await Promise.all(
+            attachments.map((file) => {
+              const formData = new FormData();
+              formData.append('file', file);
+              return axios.post(`/tickets/${created.id}/attachments`, formData, {
+                headers: { 'Content-Type': 'multipart/form-data' },
+              });
+            })
+          );
+        }
+
+        setSuccess(
+          attachments.length > 0
+            ? 'Your request and attachments were submitted successfully.'
+            : 'Your request has been submitted successfully.'
+        );
+        setTitle('');
+        setDescription('');
+        setPriority('MEDIUM');
+        setCategoryId('');
+      }
+
+      setAttachments([]);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     } catch (err) {
       console.error(err);
       setError('Failed to submit request. Please try again.');
@@ -95,10 +181,22 @@ const [myTicketsLoading, setMyTicketsLoading] = useState(true);
   };
 
   const handleClear = () => {
-    setTitle('');
-    setDescription('');
-    setPriority('MEDIUM');
-    setCategoryId('');
+    if (isEdit) {
+      setTitle(editTicket?.title || '');
+      setDescription(editTicket?.description || '');
+      setPriority(editTicket?.priority || 'MEDIUM');
+      setCategoryId(editTicket?.category_id ? String(editTicket.category_id) : '');
+      setDepartmentId(editTicket?.department_id ? String(editTicket.department_id) : departmentId);
+    } else {
+      setTitle('');
+      setDescription('');
+      setPriority('MEDIUM');
+      setCategoryId('');
+    }
+    setAttachments([]);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
     setError('');
     setSuccess('');
   };
@@ -113,13 +211,14 @@ const [myTicketsLoading, setMyTicketsLoading] = useState(true);
 
   return (
     <div className="max-w-6xl mx-auto space-y-4">
-      
       <div className="space-y-1">
         <h1 className="text-lg font-semibold text-blue-950">
-          New Service Request
+          {isEdit ? 'Edit Service Request' : 'New Service Request'}
         </h1>
         <p className="text-xs text-slate-500">
-          Use this form to request ICT support for computers, printers, networks, or software.
+          {isEdit
+            ? 'Update your existing request details (allowed while status is NEW).'
+            : 'Use this form to request ICT support for computers, printers, networks, or software.'}
         </p>
       </div>
 
@@ -255,6 +354,59 @@ const [myTicketsLoading, setMyTicketsLoading] = useState(true);
         </div>
 
         
+        <div className="space-y-1">
+          <label className="block text-[11px] font-medium text-slate-600">
+            Attachments (optional)
+          </label>
+          {isEdit && (
+            <div className="rounded-md border border-slate-200 bg-slate-50 px-3 py-2 text-[12px] text-slate-700 mb-2">
+              <div className="text-[11px] font-medium text-slate-600 mb-1">
+                Existing attachments
+              </div>
+              {existingAttachmentsLoading ? (
+                <div className="text-[11px] text-slate-500">Loading attachments...</div>
+              ) : existingAttachments.length === 0 ? (
+                <div className="text-[11px] text-slate-500">No attachments uploaded yet.</div>
+              ) : (
+                <ul className="space-y-1">
+                  {existingAttachments.map((a) => (
+                    <li key={a.id}>
+                      <a
+                        href={`http://localhost:4000/uploads/${a.filename_stored}`}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-blue-700 hover:text-blue-900 hover:underline"
+                      >
+                        {a.filename_original}
+                      </a>
+                      <span className="text-[10px] text-slate-500 ml-2">
+                        ({a.mime_type || 'file'})
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          )}
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt"
+            onChange={(e) => setAttachments(Array.from(e.target.files || []))}
+            className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <p className="text-[10px] text-slate-500">
+            You can add screenshots or files to help technicians diagnose the issue.
+          </p>
+          {attachments.length > 0 && (
+            <div className="text-[11px] text-slate-600">
+              {attachments.length} file{attachments.length > 1 ? 's' : ''} selected
+            </div>
+          )}
+        </div>
+
+        
         <div className="flex items-center justify-end gap-2 pt-2">
           <button
             type="button"
@@ -268,7 +420,15 @@ const [myTicketsLoading, setMyTicketsLoading] = useState(true);
             disabled={saving || metaLoading}
             className="rounded-md bg-blue-700 px-4 py-1.5 text-xs font-medium text-white hover:bg-blue-800 disabled:opacity-60"
           >
-            {saving ? 'Submitting...' : metaLoading ? 'Loading...' : 'Submit Request'}
+            {saving
+              ? isEdit
+                ? 'Saving...'
+                : 'Submitting...'
+              : metaLoading
+              ? 'Loading...'
+              : isEdit
+              ? 'Save Changes'
+              : 'Submit Request'}
           </button>
         </div>
       </form>

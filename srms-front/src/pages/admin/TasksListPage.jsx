@@ -47,6 +47,16 @@ export default function TasksListPage() {
   }, []);
 
   const handleDelete = async (id) => {
+    const target = tasks.find((t) => t.id === id);
+    const isLocked =
+      target &&
+      target.status === 'DONE' &&
+      target.technician_rating !== null &&
+      target.technician_rating !== undefined;
+    if (isLocked) {
+      setError('This task has a final rating and can no longer be deleted.');
+      return;
+    }
     if (!window.confirm('Delete this task?')) return;
     setError('');
     setSuccess('');
@@ -61,6 +71,16 @@ export default function TasksListPage() {
   };
 
   const handleStatusQuickChange = async (taskId, newStatus) => {
+    const target = tasks.find((t) => t.id === taskId);
+    const isLocked =
+      target &&
+      target.status === 'DONE' &&
+      target.technician_rating !== null &&
+      target.technician_rating !== undefined;
+    if (isLocked) {
+      setError('This task has a final rating and can no longer be modified.');
+      return;
+    }
     setError('');
     setSuccess('');
     try {
@@ -253,6 +273,11 @@ export default function TasksListPage() {
                         onChange={(e) =>
                           handleStatusQuickChange(t.id, e.target.value)
                         }
+                        disabled={
+                          t.status === 'DONE' &&
+                          t.technician_rating !== null &&
+                          t.technician_rating !== undefined
+                        }
                       >
                         {STATUS_OPTIONS.map((s) => (
                           <option key={s} value={s}>
@@ -274,6 +299,11 @@ export default function TasksListPage() {
                       <button
                         type="button"
                         onClick={() => navigate(`/tasks/${t.id}/edit`)}
+                        disabled={
+                          t.status === 'DONE' &&
+                          t.technician_rating !== null &&
+                          t.technician_rating !== undefined
+                        }
                         className="inline-flex items-center px-3 py-1.5 rounded-md border border-blue-600 text-[11px] font-medium text-blue-700 hover:bg-blue-600 hover:text-white transition"
                       >
                         Edit
@@ -284,6 +314,11 @@ export default function TasksListPage() {
                       <button
                         type="button"
                         onClick={() => handleDelete(t.id)}
+                        disabled={
+                          t.status === 'DONE' &&
+                          t.technician_rating !== null &&
+                          t.technician_rating !== undefined
+                        }
                         className="inline-flex items-center px-3 py-1.5 rounded-md border border-red-500 text-[11px] font-medium text-red-600 hover:bg-red-500 hover:text-white transition"
                       >
                         Delete

@@ -151,33 +151,6 @@ export default function EmployeeTicketDetailPage() {
     return <div className="flex items-center gap-1 text-base">{stars}</div>;
   };
 
-  const handleSaveEdit = async (e) => {
-    e.preventDefault();
-    if (!canEdit) return;
-
-    setSavingEdit(true);
-    setError('');
-    setSuccess('');
-    try {
-      await axios.patch(`/tickets/${id}/employee-update`, {
-        title: editTitle,
-        description: editDescription,
-        priority: editPriority,
-      });
-      await loadTicket();
-      setEditMode(false);
-      setSuccess('Your request has been updated.');
-    } catch (err) {
-      console.error(err);
-      setError(
-        err.response?.data?.message ||
-          'Failed to update your request. You can only edit while status is NEW.'
-      );
-    } finally {
-      setSavingEdit(false);
-    }
-  };
-
   const handleSubmitRating = async (e) => {
     e.preventDefault();
     if (!canRate) return;
@@ -266,13 +239,13 @@ export default function EmployeeTicketDetailPage() {
         <div className="flex items-center gap-2">
           
           {canEdit && (
-            <button
-              type="button"
-              onClick={() => setEditMode((v) => !v)}
+            <Link
+              to="/employee/new-request"
+              state={{ editTicket: ticket }}
               className="rounded-md border border-blue-600 px-3 py-1.5 text-xs font-medium text-blue-700 hover:bg-blue-50"
             >
-              {editMode ? 'Cancel edit' : 'Edit request'}
-            </button>
+              Update request
+            </Link>
           )}
 
           
@@ -411,76 +384,6 @@ export default function EmployeeTicketDetailPage() {
           </div>
 
           
-          {editMode && canEdit && (
-            <form
-              onSubmit={handleSaveEdit}
-              className="bg-white rounded-2xl border border-blue-200 border-l-4 border-l-blue-500 p-4 text-sm space-y-3 shadow-sm"
-            >
-              <h3 className="text-sm font-semibold text-blue-900 mb-1">
-                Edit your request (allowed while status is NEW)
-              </h3>
-
-              <div className="space-y-1">
-                <label className="block text-[11px] font-medium text-slate-600">
-                  Title
-                </label>
-                <input
-                  type="text"
-                  value={editTitle}
-                  onChange={(e) => setEditTitle(e.target.value)}
-                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="block text-[11px] font-medium text-slate-600">
-                  Description
-                </label>
-                <textarea
-                  rows={4}
-                  value={editDescription}
-                  onChange={(e) => setEditDescription(e.target.value)}
-                  className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  required
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="block text-[11px] font-medium text-slate-600">
-                  Priority
-                </label>
-                <select
-                  value={editPriority}
-                  onChange={(e) => setEditPriority(e.target.value)}
-                  className="w-48 rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="LOW">Low</option>
-                  <option value="MEDIUM">Medium</option>
-                  <option value="HIGH">High</option>
-                  <option value="CRITICAL">Critical</option>
-                </select>
-              </div>
-
-              <div className="flex justify-end gap-2 pt-1">
-                <button
-                  type="button"
-                  onClick={() => setEditMode(false)}
-                  className="rounded-md border border-slate-300 px-3 py-1.5 text-xs font-medium text-slate-700 hover:bg-slate-50"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={savingEdit}
-                  className="rounded-md bg-blue-700 px-4 py-1.5 text-xs font-medium text-white hover:bg-blue-800 disabled:opacity-60"
-                >
-                  {savingEdit ? 'Saving...' : 'Save changes'}
-                </button>
-              </div>
-            </form>
-          )}
-
           
           {showRating && canRate && (
             <form

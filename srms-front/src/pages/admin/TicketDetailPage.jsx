@@ -24,6 +24,12 @@ export default function TicketDetailPage() {
   const [uploading, setUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
 
+  const isLocked =
+    ticket &&
+    (ticket.status === 'RESOLVED' || ticket.status === 'CLOSED') &&
+    ticket.feedback_rating !== null &&
+    ticket.feedback_rating !== undefined;
+
 const reloadTicket = () => {
   setLoading(true);
   axios
@@ -76,6 +82,7 @@ const reloadTicket = () => {
   }, [id]);
 
   const updateStatus = async () => {
+    if (isLocked) return;
     setSaving(true);
     setSuccess('');
     setError('');
@@ -93,6 +100,7 @@ const reloadTicket = () => {
   };
 
   const assignTicket = async () => {
+    if (isLocked) return;
     if (!assignId) return;
     setSaving(true);
     setSuccess('');
@@ -113,6 +121,10 @@ const reloadTicket = () => {
   };
 
   const handleUploadAttachment = async () => {
+    if (isLocked) {
+      alert('Cannot modify attachments after employee has rated a resolved ticket.');
+      return;
+    }
     if (!selectedFile) {
       alert('Please choose a file first.');
       return;
@@ -146,6 +158,23 @@ const reloadTicket = () => {
   if (!ticket) {
     return <div className="text-sm text-red-500">Ticket not found.</div>;
   }
+
+  const renderStaticStars = (score) => {
+    if (score == null) return null;
+    const rounded = Math.round(Number(score));
+    const stars = [];
+    for (let i = 1; i <= 5; i++) {
+      stars.push(
+        <span
+          key={i}
+          className={i <= rounded ? 'text-yellow-400' : 'text-slate-300'}
+        >
+          ★
+        </span>
+      );
+    }
+    return <div className="flex items-center gap-1 text-base">{stars}</div>;
+  };
 
   return (
     <div className="space-y-5">
@@ -190,6 +219,23 @@ const reloadTicket = () => {
           <span className="font-medium text-slate-700">Assigned to:</span>{' '}
           <span className="text-slate-800">{ticket.assignee_name || '-'}</span>
         </div>
+        {(ticket.feedback_rating !== null &&
+          ticket.feedback_rating !== undefined) && (
+          <div className="flex items-center gap-2 mt-1 text-xs text-emerald-700">
+            <span className="font-medium text-slate-700">Employee rating:</span>
+            <div className="flex items-center gap-2">
+              {renderStaticStars(ticket.feedback_rating)}
+              <span className="text-[11px] text-slate-700">
+                {Number(ticket.feedback_rating).toFixed(1)} / 5
+              </span>
+              {ticket.feedback_comment && (
+                <span className="text-[11px] text-slate-500 italic">
+                  “{ticket.feedback_comment}”
+                </span>
+              )}
+            </div>
+          </div>
+        )}
         <div className="mt-2">
           <span className="font-medium text-slate-700">Description:</span>
           <p className="mt-1 whitespace-pre-line text-slate-700">
@@ -216,6 +262,7 @@ const reloadTicket = () => {
                 const file = e.target.files?.[0] || null;
                 setSelectedFile(file);
               }}
+              disabled={isLocked}
             />
             {selectedFile && (
               <p className="text-[11px] text-slate-600 mt-1">
@@ -225,13 +272,18 @@ const reloadTicket = () => {
                 </span>
               </p>
             )}
+            {isLocked && (
+              <p className="text-[10px] text-red-600 mt-1">
+                Ticket has been rated after resolution; further changes are locked.
+              </p>
+            )}
           </div>
 
           <div>
             <button
               type="button"
               onClick={handleUploadAttachment}
-              disabled={uploading || !selectedFile}
+              disabled={uploading || !selectedFile || isLocked}
               className="inline-flex items-center rounded-md bg-blue-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-800 disabled:opacity-60"
             >
               {uploading ? 'Uploading...' : 'Upload Attachment'}
@@ -293,6 +345,7 @@ const reloadTicket = () => {
               className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               value={status}
               onChange={(e) => setStatus(e.target.value)}
+              disabled={isLocked}
             >
               <option value="NEW">NEW</option>
               <option value="IN_PROGRESS">IN_PROGRESS</option>
@@ -302,7 +355,7 @@ const reloadTicket = () => {
             </select>
             <button
               onClick={updateStatus}
-              disabled={saving}
+              disabled={saving || isLocked}
               className="mt-2 inline-flex items-center rounded-md bg-blue-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-800 disabled:opacity-60"
             >
               Update Status
@@ -316,6 +369,7 @@ const reloadTicket = () => {
     className="w-full rounded-md border border-slate-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
     value={assignId}
     onChange={(e) => setAssignId(e.target.value)}
+    disabled={isLocked}
   >
     <option value="">-- Select technician --</option>
     {users
@@ -328,7 +382,7 @@ const reloadTicket = () => {
   </select>
   <button
     onClick={assignTicket}
-    disabled={saving || !assignId}
+    disabled={saving || !assignId || isLocked}
     className="mt-2 inline-flex items-center rounded-md bg-blue-700 px-3 py-1.5 text-xs font-medium text-white hover:bg-blue-800 disabled:opacity-60"
   >
     Assign Ticket
