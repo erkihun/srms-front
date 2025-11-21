@@ -1,0 +1,11 @@
+{
+  "name": "srms-monorepo",
+  "private": true,
+  "workspaces": [
+    "srms-front"
+  ],
+  "scripts": {
+    "build": "npm run build --workspace srms-front",
+    "dev": "npm run dev --workspace srms-front"
+  }
+}
