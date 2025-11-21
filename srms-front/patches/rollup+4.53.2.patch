@@ -1,0 +1,46 @@
+diff --git a/node_modules/rollup/dist/native.js b/node_modules/rollup/dist/native.js
+index c5a65c3..90a1f81 100644
+--- a/node_modules/rollup/dist/native.js
++++ b/node_modules/rollup/dist/native.js
+@@ -89,9 +89,38 @@ const requireWithFriendlyError = id => {
+ 	}
+ };
+ 
+-const { parse, parseAsync, xxhashBase64Url, xxhashBase36, xxhashBase16 } = requireWithFriendlyError(
+-	existsSync(path.join(__dirname, localName)) ? localName : `@rollup/rollup-${packageBase}`
+-);
++const skipNative = process.env.ROLLUP_SKIP_NODEJS_NATIVE === 'true';
++
++const loadBindings = () => {
++	const target = existsSync(path.join(__dirname, localName)) ? localName : `@rollup/rollup-${packageBase}`;
++	if (skipNative) {
++		return loadWasmBindings();
++	}
++	try {
++		return requireWithFriendlyError(target);
++	} catch (error) {
++		if (
++			error?.cause?.code === 'MODULE_NOT_FOUND' ||
++			error?.message?.includes('Cannot find module')
++		) {
++			return loadWasmBindings(error);
++		}
++		throw error;
++	}
++};
++
++const loadWasmBindings = originalError => {
++	try {
++		return require('@rollup/wasm-node/dist/native.js');
++	} catch (wasmError) {
++		if (originalError) {
++			throw originalError;
++		}
++		throw wasmError;
++	}
++};
++
++const { parse, parseAsync, xxhashBase64Url, xxhashBase36, xxhashBase16 } = loadBindings();
+ 
+ function getPackageBase() {
+ 	const imported = bindingsByPlatformAndArch[platform]?.[arch];
