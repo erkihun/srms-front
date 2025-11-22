@@ -54,7 +54,9 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('srms_token');
     setToken(null);
     setUser(null);
-    window.location.href = '/login';
+    const redirectTarget =
+      import.meta.env.VITE_FRONTEND_URL || '/login';
+    window.location.href = redirectTarget;
   };
 
   return (
