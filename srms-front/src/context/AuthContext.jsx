@@ -29,7 +29,13 @@ export function AuthProvider({ children }) {
         localStorage.setItem('srms_user', JSON.stringify(res.data));
       } catch (err) {
         console.error('Failed to restore session', err);
-        // Keep the cached user/token to avoid forced logout on transient or 401 errors.
+        // Clear on explicit unauthorized, keep cache on transient failures.
+        if (err?.response?.status === 401) {
+          localStorage.removeItem('srms_token');
+          localStorage.removeItem('srms_user');
+          setToken(null);
+          setUser(null);
+        }
       } finally {
         setInitializing(false);
       }
