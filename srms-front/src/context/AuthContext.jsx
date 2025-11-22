@@ -29,14 +29,7 @@ export function AuthProvider({ children }) {
         localStorage.setItem('srms_user', JSON.stringify(res.data));
       } catch (err) {
         console.error('Failed to restore session', err);
-        // Only clear token if the backend says unauthorized; otherwise keep it
-        // so transient network/API issues don't auto-logout the user.
-        if (err?.response?.status === 401) {
-          localStorage.removeItem('srms_token');
-          localStorage.removeItem('srms_user');
-          setToken(null);
-          setUser(null);
-        }
+        // Keep the cached user/token to avoid forced logout on transient or 401 errors.
       } finally {
         setInitializing(false);
       }
