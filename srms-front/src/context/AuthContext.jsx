@@ -20,9 +20,13 @@ export function AuthProvider({ children }) {
         setUser(res.data);
       } catch (err) {
         console.error('Failed to restore session', err);
-        localStorage.removeItem('srms_token');
-        setToken(null);
-        setUser(null);
+        // Only clear token if the backend says unauthorized; otherwise keep it
+        // so transient network/API issues don't auto-logout the user.
+        if (err?.response?.status === 401) {
+          localStorage.removeItem('srms_token');
+          setToken(null);
+          setUser(null);
+        }
       } finally {
         setInitializing(false);
       }
