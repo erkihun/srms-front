@@ -5,7 +5,15 @@ const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
   const [token, setToken] = useState(() => localStorage.getItem('srms_token'));
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(() => {
+    const raw = localStorage.getItem('srms_user');
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return null;
+    }
+  });
   const [loading, setLoading] = useState(false);
   const [initializing, setInitializing] = useState(true);
 
@@ -18,11 +26,16 @@ export function AuthProvider({ children }) {
       try {
         const res = await axios.get('/auth/me');
         setUser(res.data);
+        localStorage.setItem('srms_user', JSON.stringify(res.data));
       } catch (err) {
         console.error('Failed to restore session', err);
-        localStorage.removeItem('srms_token');
-        setToken(null);
-        setUser(null);
+        // Only clear on explicit unauthorized; keep cached user on transient errors.
+        if (err?.response?.status === 401) {
+          localStorage.removeItem('srms_token');
+          localStorage.removeItem('srms_user');
+          setToken(null);
+          setUser(null);
+        }
       } finally {
         setInitializing(false);
       }
@@ -36,6 +49,7 @@ export function AuthProvider({ children }) {
       const res = await axios.post('/auth/login', { email, password });
       const { token: jwt, user: loggedUser } = res.data;
       localStorage.setItem('srms_token', jwt);
+      localStorage.setItem('srms_user', JSON.stringify(loggedUser));
       setToken(jwt);
       setUser(loggedUser);
       return { ok: true, user: loggedUser };
@@ -52,9 +66,12 @@ export function AuthProvider({ children }) {
 
   const logout = () => {
     localStorage.removeItem('srms_token');
+    localStorage.removeItem('srms_user');
     setToken(null);
     setUser(null);
-    window.location.href = '/login';
+    const redirectTarget =
+      import.meta.env.VITE_FRONTEND_URL || '/login';
+    window.location.href = redirectTarget;
   };
 
   return (
