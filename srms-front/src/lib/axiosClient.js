@@ -1,5 +1,6 @@
 import axios from 'axios';
 
+// Default to the Render backend when no explicit API URL is provided
 const baseURL =
   import.meta.env.VITE_API_URL ||
   (typeof window !== 'undefined' && window.location.hostname === 'localhost'
@@ -7,7 +8,6 @@ const baseURL =
     : 'https://srms-ewt8.onrender.com/api');
 
 const api = axios.create({ baseURL });
-
 
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('srms_token');
