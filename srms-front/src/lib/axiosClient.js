@@ -4,7 +4,7 @@ const baseURL =
   import.meta.env.VITE_API_URL ||
   (typeof window !== 'undefined' && window.location.hostname === 'localhost'
     ? 'http://localhost:4000/api'
-    : 'https://srms-back-1.onrender.com/api');
+    : 'https://srms-ewt8.onrender.com/api');
 
 const api = axios.create({ baseURL });
 
